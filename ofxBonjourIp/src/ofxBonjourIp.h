@@ -11,6 +11,12 @@
 #import <arpa/inet.h>
 
 
+// defaults for making device discoverable
+#define BONJOUR_TYPE "_ofxBonjourIp._tcp."
+#define BONJOUR_NAME "" // becomes device name
+#define BONJOUR_PORT 7777
+#define BONJOUR_DOMAIN "local"
+
 
 class ofxBonjourIp;
 /*
@@ -69,9 +75,9 @@ class ofxBonjourIp {
         ~ofxBonjourIp();
 		
         BonjourServiceDelegate * bonjourDelegate; // ios delegate
-        bool isServer;
     
-        // SERVER        
+        // BROADCAST SERVICE- MAKES DEVICE DISCOVERABLE
+        void startService();
         void startService( string type, string name, int port, string domain = "" );
         void stopService();
         
@@ -84,7 +90,8 @@ class ofxBonjourIp {
         string deviceIp;
 
     
-        // CLIENT
+        // CLIENT- FIND ANOTHER DEVICE (AUTO CONNECTS)
+        void discoverService();
         void discoverService( string type, string domain );
         bool isConnected;
     

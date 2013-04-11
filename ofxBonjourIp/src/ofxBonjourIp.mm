@@ -18,7 +18,6 @@ ofxBonjourIp::ofxBonjourIp(){
     deviceIp = "";
     serverIp = "";
     serverHostName = "";
-    isServer = true;
     isConnected = false;
     
     // setup objc style delegate
@@ -29,9 +28,13 @@ ofxBonjourIp::~ofxBonjourIp(){
     [bonjourDelegate dealloc];
 }
 
+void ofxBonjourIp::startService() {
+    
+    startService(BONJOUR_TYPE, BONJOUR_NAME, BONJOUR_PORT, BONJOUR_DOMAIN);
+}
+
 void ofxBonjourIp::startService( string type, string name, int port, string domain ){
 
-    isServer = true;    
     [bonjourDelegate startService:ofxStringToNSString(type) name:ofxStringToNSString(name) port:port domain:ofxStringToNSString(domain)];
 }
 
@@ -54,10 +57,13 @@ string ofxBonjourIp::getDeviceIp() {
 
 
 
-// CLIENT
+// CLIENT - connects to a service automatically
+void ofxBonjourIp::discoverService() {
+    discoverService(BONJOUR_TYPE, BONJOUR_DOMAIN);
+}
+
 void ofxBonjourIp::discoverService( string type, string domain ){
     
-    isServer = false;
     isConnected = false;
     [bonjourDelegate discoverService:ofxStringToNSString(type) domain:ofxStringToNSString(domain)];
 }
@@ -283,13 +289,18 @@ string ofxBonjourIp::getServerIp() {
     for (NSData *address in [sender addresses]) {
         struct sockaddr_in *socketAddress = (struct sockaddr_in *) [address bytes];
         string ip = inet_ntoa(socketAddress->sin_addr);
-        if(ip != "0.0.0.0") {
+        
+        // don't connect to self or 0.0.0.0
+        if(ip != "0.0.0.0" && ip != bonjourCpp->deviceIp) {
+            NSLog(@"* Successful connection *\n");
             NSLog(@"Service name: %@ , ip: %s , port %i", [sender name], inet_ntoa(socketAddress->sin_addr), [sender port]);
             NSLog(@"Service host: %@ ", [sender hostName]);
             NSLog(@"Service port: %i ", [sender port]);
             bonjourCpp->isConnected = true;
             bonjourCpp->serverHostName = ofxNSStringToString( [sender hostName] );
             bonjourCpp->serverIp = ip;
+        } else {
+             NSLog(@"Not connecting to: %@ , ip: %s , port %i", [sender name], inet_ntoa(socketAddress->sin_addr), [sender port]);
         }
         
     }

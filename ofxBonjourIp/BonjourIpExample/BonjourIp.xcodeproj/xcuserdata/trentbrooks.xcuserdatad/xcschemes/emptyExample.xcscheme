@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "1D6058900D05DD3D006BFB54"
-               BuildableName = "BonjourClient.app"
-               BlueprintName = "BonjourClient"
-               ReferencedContainer = "container:BonjourClient.xcodeproj">
+               BuildableName = "BonjourIp.app"
+               BlueprintName = "BonjourIp"
+               ReferencedContainer = "container:BonjourIp.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "1D6058900D05DD3D006BFB54"
-            BuildableName = "BonjourClient.app"
-            BlueprintName = "BonjourClient"
-            ReferencedContainer = "container:BonjourClient.xcodeproj">
+            BuildableName = "BonjourIp.app"
+            BlueprintName = "BonjourIp"
+            ReferencedContainer = "container:BonjourIp.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </TestAction>
@@ -52,9 +52,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "1D6058900D05DD3D006BFB54"
-            BuildableName = "BonjourClient.app"
-            BlueprintName = "BonjourClient"
-            ReferencedContainer = "container:BonjourClient.xcodeproj">
+            BuildableName = "BonjourIp.app"
+            BlueprintName = "BonjourIp"
+            ReferencedContainer = "container:BonjourIp.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <AdditionalOptions>
@@ -70,9 +70,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "1D6058900D05DD3D006BFB54"
-            BuildableName = "BonjourClient.app"
-            BlueprintName = "BonjourClient"
-            ReferencedContainer = "container:BonjourClient.xcodeproj">
+            BuildableName = "BonjourIp.app"
+            BlueprintName = "BonjourIp"
+            ReferencedContainer = "container:BonjourIp.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
