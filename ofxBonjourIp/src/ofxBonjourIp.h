@@ -1,14 +1,23 @@
-
 #pragma once
 
+#include "ofMain.h"
+#include <ifaddrs.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <CFNetwork/CFNetwork.h>
 
-#import "ofMain.h"
-#ifdef TARGET_OF_IPHONE
-    #import "ofxiPhoneExtras.h"
-#endif
-//#import <Cocoa/Cocoa.h>
-#import <ifaddrs.h>
-#import <arpa/inet.h>
+/*
+ ofxBonjourIp created by Trent Brooks.
+ - Uses CFNetServices (https://developer.apple.com/library/mac/#documentation/CoreFoundation/Reference/CFNetServiceRef/Reference/reference.html) instead of NSNetServices, as this is recommended for C and C++ applications. So no need to rename .cpp files to .mm or anything. 
+ - ios examples needs the CFNetwork framework added to your project. Under TARGETS > BonjourIp, under the 'Build Phases' tab, where it says 'Link binary with libraries', click '+' and select the 'CFNetwork.framework'.
+*/
+
+/* TODOS
+ - events for service published, service discovered, service removed
+ - typedef ofxBonjourIp so ios uses ofxNSBonjourIp, and osx uses ofxBonjourIp. Or just add CFNetwork to ios example?
+ - fix for multiple devices connecting to a server. Currently only single connection between 2 devices for 'pairing'. (just make a vector with all resolved ips's)
+ - more testing.
+ */
 
 
 // defaults for making device discoverable
@@ -18,92 +27,51 @@
 #define BONJOUR_DOMAIN "local"
 
 
-class ofxBonjourIp;
-/*
- ofxBonjourIp created by Trent Brooks.
- - Using Bonjour services to find an ip address or device name
- - Not setup for network comms- Bonjour streams are ugly. Use OSC, UDP or TCP instead (more OF friendly).
-*/
-
-// OBJC DELEGATE
-@interface BonjourServiceDelegate : NSObject<NSNetServiceDelegate,NSNetServiceBrowserDelegate> {
-    
-    ofxBonjourIp * bonjourCpp; // giving the delegate access to the OF c++ implementation as well
-    
-	NSNetService *netService; // for server
-    
-    NSNetServiceBrowser *serviceBrowser; // for client
-    NSMutableArray *services; // Keeps track of available services
-    BOOL searching;// Keeps track of search status
-}
-
-- (id) init:(ofxBonjourIp *) bCpp;
-- (void) stopService;
-- (NSString *) getIPAddress;
-
-// server
-- (void) startService:(NSString*)type name:(NSString*)name port:(int)port domain:(NSString*)domain;
-- (void) netService:(NSNetService *)aNetService didNotPublish:(NSDictionary *)dict;
-- (void) netServiceDidPublish:(NSNetService *)sender;
-- (void) netServiceWillPublish:(NSNetService *)sender;
-- (void) handleError:(NSNumber *)error withService:(NSNetService *)service;
-
-//client
-- (void) discoverService:(NSString*)type domain:(NSString*)domain;
-- (void) netServiceBrowserWillSearch:(NSNetServiceBrowser *)browser;
-- (void) netServiceBrowserDidStopSearch:(NSNetServiceBrowser *)browser;
-- (void) netServiceBrowser:(NSNetServiceBrowser *)browser didNotSearch:(NSDictionary *)errorDict;
-- (void) netServiceBrowser:(NSNetServiceBrowser *)browser didFindService:(NSNetService *)aNetService moreComing:(BOOL)moreComing;
-- (void) netServiceBrowser:(NSNetServiceBrowser *)browser didRemoveService:(NSNetService *)aNetService moreComing:(BOOL)moreComing;
-
-- (void) netServiceWillResolve:(NSNetService *)sender;
-- (void) netServiceDidResolveAddress:(NSNetService *)sender;
-- (void) netService:(NSNetService *)sender didNotResolve:(NSDictionary *)errorDict;
-
-//props
-@property(nonatomic, retain) NSNetService *netService;
-@property(nonatomic, retain) NSNetServiceBrowser *serviceBrowser;
-
-@end
-
-
-// OF CLASS
 class ofxBonjourIp {
-	public:
+	
+public:
+    
+    ofxBonjourIp();
+	~ofxBonjourIp();
+    
+    
+    // BROADCAST SERVICE- MAKES DEVICE DISCOVERABLE
+    void startService(); //uses defaults
+    void startService( string type, string name, int port, string domain = "" );
+    void stopService();
+    CFNetServiceRef netService; // the CFNetwork service
+    
+    // returns name of this device- can use this to connect via osc
+    string getDeviceHostName();
+    string deviceHostName;
+    
+    // returns ip address of this device- can use this to connect via osc
+    string getDeviceIp();
+    string deviceIp;
+    
+    
+    // CLIENT- FIND ANOTHER DEVICE (AUTO CONNECTS)
+    void discoverService(); //uses defaults
+    void discoverService( string type, string domain );
+    void stopDiscoverService();
+    bool isConnected;    
+    CFNetServiceBrowserRef netServiceBrowser; // the CFNetwork discovery browser
+    
+    // returns name of server- can use this to connect via osc
+    string getServerHostName();
+    string serverHostName;
+    
+    // returns ip address of server- can use this to connect via osc
+    string getServerIp();
+    string serverIp;
 
-		ofxBonjourIp();
-        ~ofxBonjourIp();
-		
-        BonjourServiceDelegate * bonjourDelegate; // ios delegate
     
-        // BROADCAST SERVICE- MAKES DEVICE DISCOVERABLE
-        void startService();
-        void startService( string type, string name, int port, string domain = "" );
-        void stopService();
-        
-        // returns name of this device- can use this to connect via osc
-        string getDeviceHostName();
-        string deviceHostName;
-    
-        // returns ip address of this device- can use this to connect via osc
-        string getDeviceIp();
-        string deviceIp;
 
-    
-        // CLIENT- FIND ANOTHER DEVICE (AUTO CONNECTS)
-        void discoverService();
-        void discoverService( string type, string domain );
-        bool isConnected;
-    
-        // returns name of server- can use this to connect via osc
-        string getServerHostName();
-        string serverHostName;
-    
-        // returns ip address of server- can use this to connect via osc
-        string getServerIp();
-        string serverIp;
-    
-    
+    // static internal helper methods - don't call these
+    static string GetMyIPAddress();
+    static void NetServicePublishedCallBack(CFNetServiceRef theService,CFStreamError* error,void* info);
+    static void NetServiceBrowserCallBack(CFNetServiceBrowserRef browser,CFOptionFlags flags,CFTypeRef domainOrService,CFStreamError* error,void* info);
+    static void NetServiceResolvedCallBack(CFNetServiceRef theService, CFStreamError* error, void* info);
+
 };
-
 

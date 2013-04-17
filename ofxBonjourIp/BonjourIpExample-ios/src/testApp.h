@@ -24,6 +24,7 @@ class testApp : public ofxiPhoneApp{
         void gotMemoryWarning();
         void deviceOrientationChanged(int newOrientation);
 
+        // remember to add the CFNetwork framework for ios
         ofxBonjourIp* bonjour;
 
         
