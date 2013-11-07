@@ -22,5 +22,10 @@ class testApp : public ofBaseApp{
 		void gotMessage(ofMessage msg);
     
         ofxBonjourIp* bonjour;
+    
+    // events (optional)
+    void onPublishedService(const void* sender, string &serviceIp);
+    void onDiscoveredService(const void* sender, string &serviceIp);
+    void onRemovedService(const void* sender, string &serviceIp);
 		
 };

@@ -3,12 +3,18 @@
 //--------------------------------------------------------------
 void testApp::setup(){
 
+    ofSetFrameRate(60);
+    ofEnableAlphaBlending();
+    
+    
     string type = "_ofxBonjourIp._tcp."; // arbitrary name with type. Could use _http._tcp.
     string name = ""; // if empty becomes device name
     int port = 7777;
     string domain = "local";
     
     bonjour = new ofxBonjourIp();
+    bonjour->addEventListeners(this); // optional
+    
     bonjour->startService();
     //bonjour->startService(type, name, port, domain);
     
@@ -24,7 +30,7 @@ void testApp::update(){
 //--------------------------------------------------------------
 void testApp::draw(){
 
-    ofEnableAlphaBlending();
+    
     ofSetColor(0);
     
     ofDrawBitmapString("BONJOUR IP: ", 20, 20);
@@ -39,7 +45,7 @@ void testApp::draw(){
     
     // is connected to a service
     ofDrawBitmapString("Connected to other device: ", 20, 145);
-    ofDrawBitmapStringHighlight((bonjour->isConnected) ? "YES" : "NO", 20, 170);
+    ofDrawBitmapStringHighlight((bonjour->isConnectedToService()) ? "YES" : "NO", 20, 170);
     
     // device name- can use this to connect via osc or udp or tcp
     ofDrawBitmapString("Other device's name: ", 20, 195);
@@ -48,11 +54,19 @@ void testApp::draw(){
     // device ip- can use this to connect via osc or udp or tcp
     ofDrawBitmapString("Other device's IP: ", 20, 245);
     ofDrawBitmapStringHighlight(bonjour->getServerIp(), 20, 270);
-    
-    
-    
-    
-    ofDisableAlphaBlending();
+}
+
+//--------------------------------------------------------------
+void testApp::onPublishedService(const void* sender, string &serviceIp) {
+    ofLog() << "Received published service event: " << serviceIp;
+}
+
+void testApp::onDiscoveredService(const void* sender, string &serviceIp) {
+    ofLog() << "Received discovered service event: " << serviceIp;
+}
+
+void testApp::onRemovedService(const void* sender, string &serviceIp) {
+    ofLog() << "Received removed service event: " << serviceIp;
 }
 
 //--------------------------------------------------------------

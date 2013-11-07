@@ -54,7 +54,8 @@ public:
     void discoverService(); //uses defaults
     void discoverService( string type, string domain );
     void stopDiscoverService();
-    bool isConnected;    
+    bool connectedToService;
+    bool isConnectedToService() { return connectedToService; }
     CFNetServiceBrowserRef netServiceBrowser; // the CFNetwork discovery browser
     
     // returns name of server- can use this to connect via osc
@@ -65,7 +66,22 @@ public:
     string getServerIp();
     string serverIp;
 
-    
+    // events
+    ofEvent<string> publishedServiceEvent;
+    ofEvent<string> discoveredServiceEvent;
+    ofEvent<string> removedServiceEvent;
+    template <class ListenerClass>
+	void addEventListeners(ListenerClass * listener){
+        ofAddListener(publishedServiceEvent,listener,&ListenerClass::onPublishedService);
+        ofAddListener(discoveredServiceEvent,listener,&ListenerClass::onDiscoveredService);
+        ofAddListener(removedServiceEvent,listener,&ListenerClass::onRemovedService);
+    };
+    template <class ListenerClass>
+	void removeEventListeners(ListenerClass * listener){
+        ofRemoveListener(publishedServiceEvent,listener,&ListenerClass::onPublishedService);
+        ofRemoveListener(discoveredServiceEvent,listener,&ListenerClass::onDiscoveredService);
+        ofRemoveListener(removedServiceEvent,listener,&ListenerClass::onRemovedService);
+    };
 
     // static internal helper methods - don't call these
     static string GetMyIPAddress();

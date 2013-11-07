@@ -27,7 +27,11 @@ class testApp : public ofxiPhoneApp{
         // remember to add the CFNetwork framework for ios
         ofxBonjourIp* bonjour;
 
-        
+        // events (optional)
+        void onPublishedService(const void* sender, string &serviceIp);
+        void onDiscoveredService(const void* sender, string &serviceIp);
+        void onRemovedService(const void* sender, string &serviceIp);
+
 };
 
 

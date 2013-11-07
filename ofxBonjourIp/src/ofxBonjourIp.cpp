@@ -7,7 +7,7 @@ ofxBonjourIp::ofxBonjourIp(){
     deviceIp = "";
     serverIp = "";
     serverHostName = "";
-    isConnected = false;
+    connectedToService = false;
     netService = NULL;
     netServiceBrowser = NULL;
 }
@@ -84,7 +84,7 @@ void ofxBonjourIp::discoverService() {
 
 void ofxBonjourIp::discoverService( string type, string domain ){
     
-    isConnected = false;
+    connectedToService = false;
     
     // client will need to know own address
     deviceIp = ofxBonjourIp::GetMyIPAddress();//ofxNSStringToString( [self getIPAddress] );
@@ -194,14 +194,17 @@ void ofxBonjourIp::NetServicePublishedCallBack(CFNetServiceRef theService, CFStr
     if(info != NULL) {
         
         // set the device ip
-        ((ofxBonjourIp*)info)->deviceIp = ofxBonjourIp::GetMyIPAddress();
-        ofLog() << "device ip: " << ((ofxBonjourIp*)info)->getDeviceIp();
+        ofxBonjourIp* bonjour = (ofxBonjourIp*)info;
+        bonjour->deviceIp = ofxBonjourIp::GetMyIPAddress();
+        ofLog() << "device ip: " << bonjour->getDeviceIp();
         
         // set the device name
         char szHostName[255];
         gethostname(szHostName, 255);
-        ((ofxBonjourIp*)info)->deviceHostName = szHostName;
-        ofLog() << "device host name: " << ((ofxBonjourIp*)info)->getDeviceHostName();;
+        bonjour->deviceHostName = szHostName;
+        ofLog() << "device host name: " << bonjour->getDeviceHostName();
+        
+        ofNotifyEvent(bonjour->publishedServiceEvent,bonjour->deviceIp,bonjour);
     }
     
 }
@@ -219,15 +222,20 @@ void ofxBonjourIp::NetServiceBrowserCallBack(CFNetServiceBrowserRef browser,CFOp
     // unresovled still... but can get type and domain (pointless)
     CFNetServiceRef netServiceRef = (CFNetServiceRef) domainOrService; // casting to this thing
     
+    
     //service removed/closed
-    if (flags & kCFNetServiceFlagRemove) {	
+    if (flags & kCFNetServiceFlagRemove) {
         ofLog() << "Service was removed.";
         if(info != NULL) {
             
+            // notify service has been removed
+            ofxBonjourIp* bonjour = (ofxBonjourIp*)info;
+            ofNotifyEvent(bonjour->removedServiceEvent,bonjour->serverIp,bonjour); 
+            
             // reset
-            ((ofxBonjourIp*)info)->serverHostName = "";
-            ((ofxBonjourIp*)info)->serverIp = "";
-            ((ofxBonjourIp*)info)->isConnected = false;
+            bonjour->serverHostName = "";
+            bonjour->serverIp = "";
+            bonjour->connectedToService = false;
             
             // dont know if i need this? maybe causing a crash after long period of time. I don't think it's been added to the run loop yet either
             //CFNetServiceUnscheduleFromRunLoop(netServiceRef, CFRunLoopGetCurrent(),kCFRunLoopCommonModes);
@@ -265,7 +273,6 @@ void ofxBonjourIp::NetServiceResolvedCallBack(CFNetServiceRef theService, CFStre
     
     CFArrayRef addresses = CFNetServiceGetAddressing(theService);
     struct sockaddr * socketAddress = NULL;
-    char buffer[256];
     
     for(int i=0; i < CFArrayGetCount(addresses); i++) {
         
@@ -279,16 +286,20 @@ void ofxBonjourIp::NetServiceResolvedCallBack(CFNetServiceRef theService, CFStre
             int port = ntohs(((struct sockaddr_in *)socketAddress)->sin_port);
             
             // don't connect to self or 127.0.0.1 or 0.0.0.0
-            if(addr != "0.0.0.0" && addr != "127.0.0.1" && addr != ((ofxBonjourIp*)info)->deviceIp) {
+            ofxBonjourIp* bonjour = (ofxBonjourIp*)info;
+            if(addr != "0.0.0.0" && addr != "127.0.0.1" && addr != bonjour->deviceIp) {
                 
                 serviceResolved = true;
                 ofLog() << "* Successful connection: " << addr << ", " << port;
                 // info has a reference to the class object
                 
                 // set the server ip
-                ((ofxBonjourIp*)info)->serverIp = addr;
-                ((ofxBonjourIp*)info)->serverHostName = CFStringGetCStringPtr(CFNetServiceGetTargetHost(theService), kCFStringEncodingMacRoman);
-                ((ofxBonjourIp*)info)->isConnected = true;
+                bonjour->serverIp = addr;
+                bonjour->serverHostName = CFStringGetCStringPtr(CFNetServiceGetTargetHost(theService), kCFStringEncodingMacRoman);
+                bonjour->connectedToService = true;
+                
+                ofNotifyEvent(bonjour->discoveredServiceEvent,bonjour->serverIp,bonjour);
+                
             } else {
                 ofLog() << "Not connecting to: " << addr << ", " << port;
             }
