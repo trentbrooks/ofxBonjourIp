@@ -143,7 +143,7 @@ string ofxBonjourIp::GetMyIPAddress()
 {
     struct ifaddrs *interfaces = NULL;
     struct ifaddrs *temp_addr = NULL;
-    string wifiAddress = "";
+    string networkAddress = "";
     string cellAddress = "";
     
     // retrieve the current interfaces - returns 0 on success
@@ -156,14 +156,22 @@ string ofxBonjourIp::GetMyIPAddress()
                 string name = temp_addr->ifa_name; //en0
                 string addr = inet_ntoa(((struct sockaddr_in *)temp_addr->ifa_addr)->sin_addr); // pdp_ip0
                 
-                if(name == "en0") {
-                    // Interface is the wifi connection
-                    wifiAddress = addr;
-                } else
+                // ignore localhost "lo0" addresses 127.0.0.1, and "0.0.0.0"
+                //if(!ofIsStringInString(name, "lo") && addr != "0.0.0.0") {
+                if(addr != "127.0.0.1" && addr != "0.0.0.0") {
+                    
+                    // can assume here it's "en0" or "en3" or "wlan0" or "pdp_ip0" (cell address)
+                    // may need to add in a check to match the name (used to be matched to "en0")
+                    ofLog() << "interface name / ip address: " << name << " / " << addr;                    
                     if(name == "pdp_ip0") {
                         // Interface is the cell connection on the iPhone
                         cellAddress = addr;
+                    } else {
+                        // if(name == "en0") - ignoring the name as this can be different
+                        networkAddress = addr;
                     }
+                }
+                
             }
             temp_addr = temp_addr->ifa_next;
         }
@@ -171,7 +179,8 @@ string ofxBonjourIp::GetMyIPAddress()
         freeifaddrs(interfaces);
     }
     
-    string address = (wifiAddress != "") ? wifiAddress : cellAddress;
+    // will return 0.0.0.0 of it hasn't found address
+    string address = (networkAddress != "") ? networkAddress : cellAddress;
     return (address != "") ? address : "0.0.0.0";
 }
 
@@ -301,7 +310,7 @@ void ofxBonjourIp::NetServiceResolvedCallBack(CFNetServiceRef theService, CFStre
                 ofNotifyEvent(bonjour->discoveredServiceEvent,bonjour->serverIp,bonjour);
                 
             } else {
-                ofLog() << "Not connecting to: " << addr << ", " << port;
+                ofLog() << "Not connecting to self: " << addr << ", " << port;
             }
             
             

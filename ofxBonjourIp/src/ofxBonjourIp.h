@@ -12,12 +12,10 @@
  - ios examples needs the CFNetwork framework added to your project. Under TARGETS > BonjourIp, under the 'Build Phases' tab, where it says 'Link binary with libraries', click '+' and select the 'CFNetwork.framework'.
 */
 
-/* TODOS
- - events for service published, service discovered, service removed
- - typedef ofxBonjourIp so ios uses ofxNSBonjourIp, and osx uses ofxBonjourIp. Or just add CFNetwork to ios example?
+/* TODO::
  - fix for multiple devices connecting to a server. Currently only single connection between 2 devices for 'pairing'. (just make a vector with all resolved ips's)
- - more testing.
  */
+
 
 
 // defaults for making device discoverable
